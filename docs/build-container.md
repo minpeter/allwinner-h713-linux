@@ -61,8 +61,9 @@ Repeat this whenever you recreate the container. A fresh container has LLVM 18 a
 
 ## Rust for the kernel
 
-Only for kernels built with the developer fragment `KERNEL_CONFIG=rust` (CONFIG_RUST, [kernel-rust.md](kernel-rust.md));
-the release build does not use it. Pinned: rustup-init 1.28.2 (checked against its SHA-256), the toolchain 1.89.0 with
+Every kernel build since 05.11.2026: the release defconfig has `CONFIG_RUST=y` (7.3.1, for `h713_drm`;
+[kernel-rust.md](kernel-rust.md)). *Superseded:* "only for kernels built with the developer fragment `KERNEL_CONFIG=rust`;
+the release build does not use it". Pinned: rustup-init 1.28.2 (checked against its SHA-256), the toolchain 1.89.0 with
 `rust-src` (the kernel compiles `core` itself from it), `rustfmt` and `clippy`, and `bindgen-cli` 0.72.1 from crates.io
 with its own `Cargo.lock`. rustc 1.89 is built on LLVM 20, the same major version as the clang above; bindgen loads that
 clang's `libclang-20` at run time. Kernel 6.18 asks for rustc >= 1.78 and bindgen >= 0.65.1
@@ -86,9 +87,13 @@ podman exec -u root h713-build bash -c '
 ```
 
 Check, in any prepared kernel tree: `make ARCH=arm64 LLVM=1 rustavailable` says `Rust is available!`. Without this
-step a `KERNEL_CONFIG=rust` build stops after olddefconfig ("dropped what the fragments ask for: CONFIG_RUST=y").
-With it, a build without the fragment gains only the informational `CONFIG_RUSTC_*` / `CONFIG_RUST_IS_AVAILABLE`
-lines in its `.config`; no C source or C Makefile reads them (CONFIG_RUST stays off).
+step kconfig drops `CONFIG_RUST` from the release defconfig without a word, and `CONFIG_DRM_H713` with it - the kernel
+would build without `h713_drm`. So the kernel stage of `build.sh` stops right after the configuration when the `.config`
+lacks any line of the defconfig (`mainline/build/kconfig-check.sh`: "kconfig dropped what hy200_qz713df_a1_defconfig
+asks for ...: CONFIG_RUST=y, CONFIG_DRM_H713=m, CONFIG_DRM_H713_BENCH=y", tried with the toolchain off the `PATH`), and
+after `modules_install` when `h713_drm.ko` is missing where `.config` builds it; `release/check-display.py` holds the
+image to the same (`--defconfig`, `--kernel-config`, step 10 of `build-all.sh`). A `KERNEL_CONFIG=rustbench*` build
+stops the same way ("dropped what the fragments ask for: CONFIG_RUST=y").
 
 ## Rust for h713-airplay (the desktop profile)
 
