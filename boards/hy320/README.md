@@ -16,6 +16,7 @@ installed on it the same day.
 | Panel | project id `0x30`, 1920x1080 **dual port**, HTotal 2200, VTotal 1125, **164 MHz**, Hsync 2, Vsync 8, HBP 148, VBP 12, InvDCLK 1, InvHSync 2 - its `panel_config.ini` (Reserve0, and the identical copy in vendor) |
 | Lamp | `[PWMSetting]` channel 5, polarity 1 (low active), 40 kHz, vsync lock 1, duty 1..100, default 50 - the HY300 Pro's words with another default |
 | Display firmware | `display.bin` 1 252 128 B, `22a7df11...` ("ADT-3 2024", the HY350's and HY300 T08's); only in `vendor:/etc/display/mips` - `bootloader_a/_b` are FAT16 without `mips/` |
+| Display stack | **vendor** (`display.bin`) by default; the **clean** one (`h713_drm`, no display firmware) per boot with `h713-display set clean` - only where the kernel can load `h713_drm`, today the 7.3.1-rustbench bench kernel, not the release one ([display stacks](../../docs/subsystems/display-stacks.md); host-tested 04.11.2026, its device test not run) |
 | eMMC | 15 269 888 sectors, 25 partitions, a single `Reserve0` at LBA 7062528; `super` 6291456 sectors (the HY350's 5242880), so everything from `misc` on sits 1048576 sectors later than there |
 | Stock | an Android 11 system (`eng.projector.20241024.162050`, ARMv7 kernel 5.4.99) on the ADT-3 Android 10 vendor build 6245789; vendor U-Boot 2018.05-00018 of 19.04.2024, ARISC of the same day |
 | Wi-Fi | AIC8800D80 on SDIO (its firmware set is the HY310's, some `_u02` files differ) |
@@ -150,7 +151,10 @@ bootcmd=h713_disp init ${h713_project} logo; h713_conlog 0x45000000; mmc dev 1; 
 
 left the log in the unused tail of `hy310-uboot` (LBA 10240..11263, well clear of `hy310-keys` at
 12288); read it from Linux with `dd if=/dev/mmcblk0 bs=512 skip=10240 count=1024 | tail -c +17 | head -c
-<length>`. Back to the plain `bootcmd` since 01.11.2026; set it again for a U-Boot question.
+<length>`. Back to the plain `bootcmd` since 01.11.2026; set it again for a U-Boot question. Since the display-stack
+switch the plain `bootcmd` branches on `h713_display`: the `h713_conlog ...; mmc write ...;` part goes after its `fi;`
+([display stacks](../../docs/subsystems/display-stacks.md), "Device test"), and `h713-display set clean` refuses a
+`bootcmd` that does not read the key.
 
 ## What we do not know
 
