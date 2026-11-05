@@ -2,6 +2,8 @@
 # Only the project's GitHub identity goes into commits. 05.10.2026: 19 commits carried the owner's
 # private address, taken from a session's environment and noticed just before the push.
 ok='well0nez@users.noreply.github.com'
+# the fork minpeter/allwinner-h713-linux: its owner's GitHub noreply address too (05.11.2026)
+fork='62207008+minpeter@users.noreply.github.com'
 for e in "$(git config user.email)" "${GIT_AUTHOR_EMAIL:-}" "${GIT_COMMITTER_EMAIL:-}"; do
-	case "$e" in ''|"$ok"|*"+$ok") ;; *) echo "pre-commit: identity '$e' is not the project's noreply address -- set git config user.email (see AGENTS.md)" >&2; exit 1 ;; esac
+	case "$e" in ''|"$ok"|*"+$ok"|"$fork") ;; *) echo "pre-commit: identity '$e' is not the project's noreply address -- set git config user.email (see AGENTS.md)" >&2; exit 1 ;; esac
 done
